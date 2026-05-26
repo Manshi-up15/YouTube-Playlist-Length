@@ -348,19 +348,28 @@
 
     addPageNumbers();
 
-    // Save manually via Blob to force correct filename and .pdf extension
+    // Save with explicit anchor tag to fix UUID filename bug
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
-    var filename = safeName ? (safeName + "_checklist.pdf") : "playlist_checklist.pdf";
+    var filename = safeName + "_checklist.pdf";
     
-    var blob = doc.output("blob");
-    var url = window.URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    try {
+      var blob = doc.output("blob");
+      var url = window.URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    } catch (e) {
+      // Fallback to standard save if Blob fails
+      doc.save(filename);
+    }
   }
 
   function escapeHtml(str) {
