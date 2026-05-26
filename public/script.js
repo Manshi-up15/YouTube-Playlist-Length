@@ -15,7 +15,7 @@
   const modalClose = document.getElementById("modal-close");
   const videoSearch = document.getElementById("video-search");
   const sortToggle = document.getElementById("sort-toggle");
-  const downloadPdfBtn = document.getElementById("download-pdf");
+  const downloadWordBtn = document.getElementById("download-word");
 
   let currentVideos = [];
   let sortAsc = false;
@@ -167,210 +167,83 @@
     renderVideoList([...currentVideos].sort((a, b) => sortAsc ? a.durationSeconds - b.durationSeconds : b.durationSeconds - a.durationSeconds));
   });
 
-  // --- PDF Download ---
-  downloadPdfBtn.addEventListener("click", () => {
+  // --- Word Document Download ---
+  downloadWordBtn.addEventListener("click", () => {
     if (!storedPlaylistData || !currentVideos.length) {
       alert("Please analyze a playlist first before downloading.");
       return;
     }
     try {
-      generatePDF(storedPlaylistData, currentVideos);
+      generateWordDoc(storedPlaylistData, currentVideos);
     } catch (err) {
-      console.error("PDF generation error:", err);
-      alert("Error generating PDF: " + err.message);
+      console.error("Word Document generation error:", err);
+      alert("Error generating Word Document: " + err.message);
     }
   });
 
-  function generatePDF(data, videos) {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-      alert("PDF library is still loading. Please wait a moment and try again.");
-      return;
-    }
+  function generateWordDoc(data, videos) {
+    var header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+          "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+          "xmlns='http://www.w3.org/TR/REC-html40'>" +
+          "<head><title>Playlist Checklist</title>" +
+          "<style>" +
+          "body { font-family: 'Segoe UI', Arial, sans-serif; color: #333333; margin: 20px; }" +
+          "h1 { color: #f43f5e; font-size: 24px; margin-bottom: 5px; font-weight: bold; }" +
+          ".channel { color: #666666; font-size: 14px; margin-bottom: 20px; }" +
+          ".summary { background-color: #f8f5ff; border-left: 4px solid #6366f1; padding: 12px; margin-bottom: 25px; font-weight: bold; }" +
+          "table { width: 100%; border-collapse: collapse; margin-top: 15px; }" +
+          "th { background-color: #f5f5f8; text-align: left; padding: 10px; font-size: 13px; color: #666666; border-bottom: 2px solid #dddddd; font-weight: bold; }" +
+          "td { padding: 10px; border-bottom: 1px solid #eeeeee; font-size: 13px; }" +
+          ".checkbox { width: 18px; height: 18px; border: 1px solid #999999; display: inline-block; text-align: center; line-height: 18px; font-weight: bold; }" +
+          ".pos { color: #888888; font-weight: bold; }" +
+          ".duration { background-color: #f0f0f5; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }" +
+          "tr.even { background-color: #fcfcfe; }" +
+          "</style>" +
+          "</head>" +
+          "<body>" +
+          "<h1>" + (data.playlistTitle || "Playlist") + "</h1>" +
+          "<div class='channel'>By " + (data.playlistChannel || "Unknown Channel") + " &bull; " + data.availableCount + " videos</div>" +
+          "<div class='summary'>Total Duration: " + data.totalDurationFormatted + " (" + data.totalDurationHuman + ")</div>" +
+          "<h2>Video Checklist</h2>" +
+          "<table>" +
+          "<thead>" +
+          "<tr>" +
+          "<th style='width: 60px;'>Done</th>" +
+          "<th style='width: 40px;'>#</th>" +
+          "<th>Video Title</th>" +
+          "<th style='width: 100px; text-align: right;'>Duration</th>" +
+          "</tr>" +
+          "</thead>" +
+          "<tbody>";
 
-    var jsPDF = window.jspdf.jsPDF;
-    var doc = new jsPDF({ unit: "mm", format: "a4" });
-    var pageW = doc.internal.pageSize.getWidth();
-    var pageH = doc.internal.pageSize.getHeight();
-    var marginL = 15, marginR = 15, marginT = 15;
-    var contentW = pageW - marginL - marginR;
-    var y = marginT;
+    var body = "";
+    videos.forEach(function(v, i) {
+      var rowClass = (i % 2 === 0) ? "even" : "odd";
+      var title = v.title || "Unavailable";
+      body += "<tr class='" + rowClass + "'>" +
+        "<td>[  ]</td>" +
+        "<td><span class='pos'>" + v.position + "</span></td>" +
+        "<td>" + title + "</td>" +
+        "<td style='text-align: right;'><span class='duration'>" + v.durationFormatted + "</span></td>" +
+        "</tr>";
+    });
 
-    function addPageNumbers() {
-      var pages = doc.internal.getNumberOfPages();
-      for (var i = 1; i <= pages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text("Page " + i + " of " + pages, pageW / 2, pageH - 8, { align: "center" });
-        doc.text("PlaylistPulse", pageW - marginR, pageH - 8, { align: "right" });
-      }
-    }
+    var footer = "</tbody></table></body></html>";
+    var html = header + body + footer;
 
-    function needsNewPage(needed) {
-      if (y + needed > pageH - 20) {
-        doc.addPage();
-        y = marginT;
-        return true;
-      }
-      return false;
-    }
+    var blob = new Blob(['\ufeff' + html], {
+      type: 'application/msword'
+    });
 
-    function toAscii(str) {
-      if (!str) return "";
-      return String(str).replace(/[^\x00-\x7F]/g, ""); // Remove non-ASCII
-    }
-
-    // === HEADER ===
-    doc.setFillColor(15, 15, 25);
-    doc.rect(0, 0, pageW, 52, "F");
-
-    // Accent line
-    doc.setFillColor(244, 63, 94);
-    doc.rect(0, 52, pageW / 2, 1.2, "F");
-    doc.setFillColor(168, 85, 247);
-    doc.rect(pageW / 2, 52, pageW / 2, 1.2, "F");
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(255, 255, 255);
-    var safeTitle = toAscii(data.playlistTitle || "Playlist");
-    var titleLines = doc.splitTextToSize(safeTitle, contentW);
-    doc.text(titleLines, marginL, 26);
-
-    // Channel & stats - ASCII only
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(180, 180, 190);
-    var channelName = toAscii(data.playlistChannel || "");
-    doc.text(channelName + "  |  " + data.availableCount + " videos  |  Total: " + data.totalDurationFormatted + "  |  " + data.totalDurationHuman, marginL, 38);
-
-    // Date
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 130);
-    doc.text("Generated: " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), marginL, 46);
-
-    y = 60;
-
-    // === CHECKLIST LABEL ===
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(40, 40, 50);
-    doc.text("Video Checklist", marginL, y);
-    y += 3;
-    doc.setDrawColor(244, 63, 94);
-    doc.setLineWidth(0.5);
-    doc.line(marginL, y, marginL + 30, y);
-    y += 8;
-
-    // === TABLE HEADER ===
-    function drawTableHeader() {
-      doc.setFillColor(245, 245, 248);
-      doc.rect(marginL, y - 4, contentW, 8, "F");
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 100, 110);
-      doc.text("Done", marginL + 2, y);
-      doc.text("#", marginL + 14, y);
-      doc.text("VIDEO TITLE", marginL + 22, y);
-      doc.text("DURATION", pageW - marginR - 2, y, { align: "right" });
-      y += 7;
-    }
-    drawTableHeader();
-
-    // === VIDEO ROWS ===
-    doc.setFont("helvetica", "normal");
-    for (var i = 0; i < videos.length; i++) {
-      var v = videos[i];
-      var addedPage = needsNewPage(9);
-      if (addedPage) { drawTableHeader(); }
-
-      var rowY = y;
-
-      // Alternating row bg
-      if (i % 2 === 0) {
-        doc.setFillColor(252, 252, 254);
-        doc.rect(marginL, rowY - 4, contentW, 8, "F");
-      }
-
-      // Checkbox square
-      doc.setDrawColor(180, 180, 190);
-      doc.setLineWidth(0.3);
-      doc.rect(marginL + 2, rowY - 3, 4, 4, "S");
-
-      // Position
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 160);
-      doc.text(String(v.position), marginL + 14, rowY);
-
-      // Title
-      var maxTitleW = contentW - 55;
-      doc.setFontSize(8.5);
-      doc.setTextColor(v.isUnavailable ? 180 : 40, v.isUnavailable ? 180 : 40, v.isUnavailable ? 180 : 50);
-      var title = toAscii(v.title || "Unavailable");
-      while (doc.getTextWidth(title) > maxTitleW && title.length > 5) {
-        title = title.substring(0, title.length - 4) + "...";
-      }
-      doc.text(title, marginL + 22, rowY);
-
-      // Duration
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 120);
-      var durText = v.durationFormatted || "N/A";
-      var durW = doc.getTextWidth(durText) + 4;
-      var durX = pageW - marginR - durW;
-      doc.setFillColor(240, 240, 245);
-      doc.rect(durX - 1, rowY - 3.5, durW + 2, 5, "F");
-      doc.text(durText, durX + 1, rowY);
-
-      y += 8;
-    }
-
-    // === FOOTER SUMMARY ===
-    y += 4;
-    needsNewPage(20);
-    doc.setDrawColor(220, 220, 225);
-    doc.setLineWidth(0.3);
-    doc.line(marginL, y, pageW - marginR, y);
-    y += 8;
-
-    doc.setFillColor(248, 245, 255);
-    doc.rect(marginL, y - 5, contentW, 14, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(99, 102, 241);
-    var summaryText = "Total Playlist Duration: " + data.totalDurationFormatted;
-    doc.text(summaryText, marginL + 6, y + 2);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 140);
-    doc.text("(" + data.totalDurationHuman + ")", marginL + 6 + doc.getTextWidth(summaryText + "  "), y + 2);
-
-    addPageNumbers();
-
-    // Save using explicit Blob download to prevent browser extension / format corruption
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
-    if (!safeName.replace(/_/g, "").trim()) {
-      safeName = "playlist";
-    }
-    var filename = safeName + "_checklist.pdf";
-
-    try {
-      var blob = doc.output("blob");
-      var blobUrl = URL.createObjectURL(blob);
-      var link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(function() {
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-    } catch (e) {
-      console.error("Blob download failed, falling back to doc.save", e);
-      doc.save(filename);
-    }
+    a.download = safeName + "_checklist.doc";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function escapeHtml(str) {
