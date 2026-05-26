@@ -215,6 +215,11 @@
       return false;
     }
 
+    function toAscii(str) {
+      if (!str) return "";
+      return String(str).replace(/[^\x00-\x7F]/g, ""); // Remove non-ASCII
+    }
+
     // === HEADER ===
     doc.setFillColor(15, 15, 25);
     doc.rect(0, 0, pageW, 52, "F");
@@ -229,14 +234,16 @@
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(255, 255, 255);
-    var titleLines = doc.splitTextToSize(data.playlistTitle || "Playlist", contentW);
+    var safeTitle = toAscii(data.playlistTitle || "Playlist");
+    var titleLines = doc.splitTextToSize(safeTitle, contentW);
     doc.text(titleLines, marginL, 26);
 
     // Channel & stats - ASCII only
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(180, 180, 190);
-    doc.text((data.playlistChannel || "") + "  |  " + data.availableCount + " videos  |  Total: " + data.totalDurationFormatted + "  |  " + data.totalDurationHuman, marginL, 38);
+    var channelName = toAscii(data.playlistChannel || "");
+    doc.text(channelName + "  |  " + data.availableCount + " videos  |  Total: " + data.totalDurationFormatted + "  |  " + data.totalDurationHuman, marginL, 38);
 
     // Date
     doc.setFontSize(8);
@@ -300,7 +307,7 @@
       var maxTitleW = contentW - 55;
       doc.setFontSize(8.5);
       doc.setTextColor(v.isUnavailable ? 180 : 40, v.isUnavailable ? 180 : 40, v.isUnavailable ? 180 : 50);
-      var title = v.title || "Unavailable";
+      var title = toAscii(v.title || "Unavailable");
       while (doc.getTextWidth(title) > maxTitleW && title.length > 5) {
         title = title.substring(0, title.length - 4) + "...";
       }
