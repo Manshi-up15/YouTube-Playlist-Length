@@ -231,15 +231,18 @@
     var footer = "</tbody></table></body></html>";
     var html = header + body + footer;
 
-    var blob = new Blob(['\ufeff' + html], {
-      type: 'application/msword'
-    });
+    if (typeof htmlDocx === 'undefined') {
+      alert("Word generation library is still loading. Please try again in a second.");
+      return;
+    }
+
+    var blob = htmlDocx.asBlob(html);
 
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url;
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
-    a.download = safeName + "_checklist.doc";
+    a.download = safeName + "_checklist.docx";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
