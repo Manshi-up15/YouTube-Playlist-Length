@@ -237,16 +237,20 @@
     }
 
     var blob = htmlDocx.asBlob(html);
-
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
-    a.download = safeName + "_checklist.docx";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    if (window.saveAs) {
+      window.saveAs(blob, safeName + "_checklist.docx");
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = safeName + "_checklist.docx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   }
 
   function escapeHtml(str) {
