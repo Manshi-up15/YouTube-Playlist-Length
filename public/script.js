@@ -348,9 +348,19 @@
 
     addPageNumbers();
 
-    // Save
+    // Save manually via Blob to force correct filename and .pdf extension
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
-    doc.save(safeName + "_checklist.pdf");
+    var filename = safeName ? (safeName + "_checklist.pdf") : "playlist_checklist.pdf";
+    
+    var blob = doc.output("blob");
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 
   function escapeHtml(str) {
