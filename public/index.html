@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlaylistPulse — YouTube Playlist Length Calculator</title>
+  <meta name="description" content="Find the total length of any YouTube or YouTube Music playlist in a single click. Free, fast, and simple." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>▶</text></svg>" />
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-animation">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-orb bg-orb-4"></div>
+  </div>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="2" y1="2" x2="22" y2="22">
+                <stop offset="0%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">Playlist<span class="logo-accent">Pulse</span></span>
+      </div>
+      <button id="api-key-toggle" class="btn-icon" title="API Key Settings" aria-label="API Key Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- API Key Modal -->
+  <div id="api-key-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>API Key Settings</h3>
+        <button id="modal-close" class="btn-icon" aria-label="Close settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Enter your <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">YouTube Data API v3</a> key to use this tool. Your key is stored only in your browser.</p>
+        <div class="input-group">
+          <label for="api-key-input">YouTube API Key</label>
+          <input type="password" id="api-key-input" placeholder="AIzaSy..." autocomplete="off" />
+        </div>
+        <div class="modal-actions">
+          <button id="api-key-save" class="btn btn-primary">Save Key</button>
+          <button id="api-key-clear" class="btn btn-ghost">Clear Key</button>
+        </div>
+        <p class="modal-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Need help? <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank" rel="noopener">Get a free API key →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Free & Open Source
+      </div>
+      <h1>Find Any YouTube Playlist Length<br/><span class="gradient-text">In a Single Click</span></h1>
+      <p class="hero-sub">Paste a YouTube or YouTube Music playlist link and instantly get the total duration, video titles, and playback times at different speeds.</p>
+
+      <!-- Search Box -->
+      <div id="search-box" class="search-box">
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+            <path d="M10 8l6 4-6 4V8z"/>
+          </svg>
+          <input type="text" id="playlist-url" placeholder="Paste YouTube playlist link here..." autocomplete="off" />
+          <button id="clear-input" class="btn-clear hidden" aria-label="Clear input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M15 9l-6 6M9 9l6 6"/>
+            </svg>
+          </button>
+        </div>
+        <button id="analyze-btn" class="btn btn-analyze">
+          <span class="btn-text">Calculate Length</span>
+          <span class="btn-loader hidden">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.25"/>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      <div id="error-msg" class="error-msg hidden"></div>
+
+      <!-- Example Links -->
+      <div class="example-links">
+        <span>Try an example:</span>
+        <button class="example-link" data-url="https://www.youtube.com/playlist?list=PLDoPjvoNmBAx3kiplQR_oeDqLDBUDYwVv">Web Dev Playlist</button>
+        <button class="example-link" data-url="https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf">Music Playlist</button>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results" class="results hidden">
+      <!-- Playlist Header -->
+      <div id="playlist-header" class="playlist-header">
+        <div class="playlist-thumb-wrap">
+          <img id="playlist-thumb" src="" alt="Playlist Thumbnail" loading="lazy" />
+          <div class="playlist-thumb-overlay">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+              <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="playlist-info">
+          <h2 id="playlist-title" class="playlist-name"></h2>
+          <p id="playlist-channel" class="playlist-channel"></p>
+          <div class="playlist-meta">
+            <span id="video-count" class="meta-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <span></span>
+            </span>
+            <span id="unavailable-count" class="meta-badge meta-warning hidden">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+              <span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div id="stats-grid" class="stats-grid">
+        <div class="stat-card stat-card-primary">
+          <div class="stat-label">Total Length</div>
+          <div id="total-duration" class="stat-value"></div>
+          <div id="total-human" class="stat-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Average Video</div>
+          <div id="avg-duration" class="stat-value"></div>
+          <div class="stat-sub">per video</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Shortest</div>
+          <div id="shortest-duration" class="stat-value"></div>
+          <div id="shortest-title" class="stat-sub stat-sub-truncate"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Longest</div>
+          <div id="longest-duration" class="stat-value"></div>
+          <div id="longest-title" class="stat-sub stat-sub-truncate"></div>
+        </div>
+      </div>
+
+      <!-- Speed Table -->
+      <div class="speed-section">
+        <h3 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          At Different Speeds
+        </h3>
+        <div id="speed-cards" class="speed-cards"></div>
+      </div>
+
+      <!-- Video List -->
+      <div class="video-section">
+        <div class="video-section-header">
+          <h3 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            All Videos
+          </h3>
+          <div class="video-controls">
+            <input type="text" id="video-search" class="video-search" placeholder="Search videos..." />
+            <button id="sort-toggle" class="btn btn-ghost btn-sm" title="Sort by duration">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+              Sort
+            </button>
+            <button id="download-pdf" class="btn btn-download btn-sm" title="Download PDF Checklist">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download PDF
+            </button>
+          </div>
+        </div>
+        <div id="video-list" class="video-list"></div>
+        <div id="video-list-empty" class="video-list-empty hidden">
+          <p>No videos match your search.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3>Lightning Fast</h3>
+          <p>Get results in seconds, even for playlists with hundreds of videos.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Privacy First</h3>
+          <p>Your API key stays in your browser. We never store or transmit your data.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+          </div>
+          <h3>100% Free</h3>
+          <p>No sign-up, no ads, no limits. Completely free and open source.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>Built with ♥ — PlaylistPulse © 2026</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

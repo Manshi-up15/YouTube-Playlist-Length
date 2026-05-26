@@ -1,0 +1,15 @@
+{
+  "name": "youtube-playlist-length",
+  "version": "1.0.0",
+  "description": "Find YouTube & YouTube Music playlist lengths in a single click",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.7.0"
+  }
+}
