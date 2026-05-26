@@ -348,26 +348,27 @@
 
     addPageNumbers();
 
-    // Save with explicit anchor tag to fix UUID filename bug
+    // Save using explicit Blob download to prevent browser extension / format corruption
     var safeName = (data.playlistTitle || "playlist").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 40);
+    if (!safeName.replace(/_/g, "").trim()) {
+      safeName = "playlist";
+    }
     var filename = safeName + "_checklist.pdf";
-    
+
     try {
       var blob = doc.output("blob");
-      var url = window.URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
+      var blobUrl = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       setTimeout(function() {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        URL.revokeObjectURL(blobUrl);
       }, 100);
     } catch (e) {
-      // Fallback to standard save if Blob fails
+      console.error("Blob download failed, falling back to doc.save", e);
       doc.save(filename);
     }
   }
